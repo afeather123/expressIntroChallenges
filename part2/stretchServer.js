@@ -9,15 +9,18 @@ app.get('/yourroute', function(req, res) {
 
 // 1
 app.post('/create/:name/:age', (req,res) => {
-  const userData = {
-    name: req.params.name,
-    age: req.params.id
-  }
-  fs.readFile('./storage.json', 'utf8',(err, data) => {
+  
+  fs.readFile('./stretchStorage.json', 'utf8',(err, data) => {
     if(err) throw err;
     const fileData = JSON.parse(data);
-    fileData.push(userData);
-    fs.writeFile('./storage.json', JSON.stringify(fileData), () => {
+    let id = ++fileData.id_count;
+    const userData = {
+        name: req.params.name,
+        age: req.params.age,
+        id: id
+    }
+    fileData.users[id] = userData;
+    fs.writeFile('./stretchStorage.json', JSON.stringify(fileData), () => {
       res.sendStatus(200);
     });
   })
@@ -25,27 +28,20 @@ app.post('/create/:name/:age', (req,res) => {
 
 // 2
 app.get('/', (req,res) => {
-  fs.readFile('./storage.json', 'utf8', (err, data) => {
+  fs.readFile('./stretchStorage.json', 'utf8', (err, data) => {
     let fileData = JSON.parse(data);
     res.send(fileData);
   })
 })
 
 // 3
-app.get('/:name', (req, res) => {
-  fs.readFile('./storage.json', (err, data) => {
+app.get('/:id', (req, res) => {
+  fs.readFile('./stretchStorage.json', (err, data) => {
     let fileData = JSON.parse(data);
-    let user;
-    for(let i = 0; i < fileData.length; i++) {
-      if(fileData[i]['name'] === req.params.name) {
-        user = fileData[i];
-        break;
-      }
-    }
-    if(user === undefined || user === null) {
+    if(fileData.users[req.params.id] === undefined) {
       res.sendStatus(400);
     } else {
-      res.json(user);
+      res.json(fileData.users[req.params.id]);
     }
   })
 })
